@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+    parameters {
+        choice(name: 'REGION', choices: ['cn', 'sg', 'ae'], description: '部署区域')
+        choice(name: 'ENV', choices: ['dev', 'test', 'prod'], description: '部署环境')
+        string(name: 'BRANCH', defaultValue: 'main', description: '要构建的分支')
+    }
+    stages {
+        stage('初始化变量') {
+            steps {
+                script {
+                    // 公共变量组
+                    def globalCfg = globalVars(params.ENV, params.REGION)
+
+                    // 项目变量组（动态 branch）
+                    def projectCfg = pipelineVars(params.BRANCH)
+
+                    env.REGISTRY = globalCfg.registry
+                    env.SECRET_NAME = globalCfg.secret_name
+                    env.DOCKER_REGISTRY_AUTH = globalCfg.docker_registry_auth
+                    env.GIT_AUTH = globalCfg.git_auth
+                    env.K8S_AUTH = globalCfg.k8s_auth
+                    env.K8S_CLI = globalCfg.k8s_cli
+                    env.NAMESPACE = globalCfg.namespace  // 自动 = ENV
+
+                    env.PROJECT = projectCfg.project
+                    env.APP_NAME = projectCfg.app_name
+                    env.BRANCH = projectCfg.branch
+                }
+            }
+        }
+        stage('打印变量') {
+            steps {
+                sh """
+                    echo "Region: ${params.REGION}"
+                    echo "Env: ${params.ENV}"
+                    echo "Branch: $BRANCH"
+                    echo "Namespace: $NAMESPACE"
+                    echo "Project: $PROJECT"
+                    echo "App: $APP_NAME"
+                """
+            }
+        }
+    }
+}
