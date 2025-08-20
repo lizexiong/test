@@ -29,22 +29,6 @@ pipeline {
                 }
             }
         }
-
-        stage('拉取 Git 仓库') {
-            steps {
-                script {
-                    // 使用 Jenkins 中配置的 SSH Key 凭证拉取仓库
-                    sshagent(['github-ssh-key']) { // github-ssh-key 是你在 Jenkins 凭证里配置的 SSH Key ID
-                        sh """
-                            mkdir -p workspace
-                            cd workspace
-                            git clone -b $BRANCH git@github.com:lizexiong/test.git
-                        """
-                    }
-                }
-            }
-        }
-
         stage('打印变量') {
             steps {
                 sh """
